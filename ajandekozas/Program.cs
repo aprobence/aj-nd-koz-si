@@ -52,7 +52,7 @@ class Program
             switch (valasztas)
             {
                 case "1":
-                    AddGift(ajandekNev, ajandekAr, ajandekKategoria);
+                    AddGift(ajandekNev, ajandekAr, ajandekKategoria, koltseg);
                     break;
 
                 case "2":
@@ -90,17 +90,32 @@ class Program
             }
         }
 
-        static void AddGift(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria)
+        static void AddGift(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria, int koltseg)
         {
             try
             {
                 Console.WriteLine("Ajándék neve:");
                 string nev = Console.ReadLine();
                 if (string.IsNullOrEmpty(nev)) throw new Exception("Az ajándék neve nem lehet üres.");
+                if (ajandekNev.Contains(nev))
+                {
+                    Console.WriteLine("Ez az ajándék már szerepel a listában!");
+                    return;
+                }
                 
                 Console.WriteLine("Ár:");
                 int ar = Convert.ToInt32(Console.ReadLine());
-                if (int.IsNegative(ar)) throw new Exception("A termék ára nem lehet negatív!");
+                if (ar < 0)
+                {
+                    throw new Exception("Az ár nem lehet kisebb nullánál!!");
+                }
+                
+                int jelenlegiOsszeg = ajandekAr.Sum();
+                if (jelenlegiOsszeg + ar > koltseg)
+                {
+                    Console.WriteLine($"Figyelmeztetés: Az ajándék hozzáadása túllépi a költségvetést! (Jelenlegi költség: {jelenlegiOsszeg + ar} Ft)");
+                    return;
+                }
                 
                 Console.WriteLine("Kategória:");
                 string kategoria = Console.ReadLine();
@@ -109,7 +124,7 @@ class Program
                 ajandekNev.Add(nev);
                 ajandekAr.Add(ar);
                 ajandekKategoria.Add(kategoria);
-                Console.WriteLine("{nev} nevű ajándék hozzáadva a listához.");
+                Console.WriteLine($"{nev} nevű ajándék hozzáadva a listához.");
             }
             catch (FormatException)
             {
@@ -128,37 +143,37 @@ class Program
             string nev = Console.ReadLine();
             int index = ajandekNev.IndexOf(nev);
 
-            if (index <= 0)
-            {
-                try
-                {
-                    Console.Write($"Új név (jelenlegi: {ajandekNev[index]}): ");
-                    string ujNev= Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(ujNev)) ajandekNev[index] = ujNev;
-
-                    Console.Write($"Új ár (jelenlegi: {ajandekAr[index]}): ");
-                    int ujAr = Convert.ToInt32(Console.ReadLine());
-                    if (ujAr <= 0) throw new Exception("Az ajándék ára pozitív szám kell legyen!");
-                    ajandekAr[index] = ujAr;
-
-                    Console.Write($"Új kategória (jelenlegi: {ajandekKategoria[index]}): ");
-                    string ujKategoria = Console.ReadLine();
-                    ajandekKategoria[index] = string.IsNullOrEmpty(ujKategoria) ? ajandekKategoria[index] : ujKategoria;
-
-                    Console.WriteLine($"{ajandekNev[index]} módosítva.");
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("Hiba: Kérlek, adj meg érvényes számokat az árhoz!");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Hiba: {e.Message}");
-                }
-            }
-            else
+            if (index == -1)
             {
                 Console.WriteLine("Ez az ajándék nem található!");
+                return;
+            }
+            try
+            {
+                Console.Write($"Új név (jelenlegi: {ajandekNev[index]}): ");
+                string ujNev = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(ujNev)) ajandekNev[index] = ujNev;
+
+                Console.Write($"Új ár (jelenlegi: {ajandekAr[index]}): ");
+                int ujAr = Convert.ToInt32(Console.ReadLine());
+                if (ujAr > 0)
+                {
+                    ajandekAr[index] = ujAr;
+                }
+                else if (ujAr <= 0)
+                {
+                    throw new Exception("Az ajándék ára pozitív egész szám kell legyen!");
+                }
+
+                Console.Write($"Új kategória (jelenlegi: {ajandekKategoria[index]}): ");
+                string ujKategoria = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(ujKategoria)) ajandekKategoria[index] = ujKategoria;
+
+                Console.WriteLine($"{ajandekNev[index]} módosítva.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Hiba: {e.Message}");
             }
         }
 
@@ -167,18 +182,16 @@ class Program
             Console.WriteLine("Add meg a törölni kívánt ajándék nevét:");
             string nev = Console.ReadLine();
             int index = ajandekNev.IndexOf(nev);
-            
-            if (index <= 0)
-            {
-                ajandekNev.RemoveAt(index);
-                ajandekAr.RemoveAt(index);
-                ajandekKategoria.RemoveAt(index);
-                Console.WriteLine("Az ajándék sikeresen el lett távolítva a listából!");
-            }
-            else
+
+            if (index == -1)
             {
                 Console.WriteLine("Ez az ajándék nem található!");
+                return;
             }
+            ajandekNev.RemoveAt(index); 
+            ajandekAr.RemoveAt(index); 
+            ajandekKategoria.RemoveAt(index); 
+            Console.WriteLine("Az ajándék sikeresen el lett távolítva a listából!");
         }
 
         static void ViewGifts(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria)
