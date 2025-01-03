@@ -43,42 +43,50 @@ class Program
             Console.WriteLine("2. Ajándék módosítása");
             Console.WriteLine("3. Ajándék eltávolítása");
             Console.WriteLine("4. Ajándékok megtekintése");
-            Console.WriteLine("5. Költségvetés ellenőrzése");
-            Console.WriteLine("6. Statisztikák megtekintése");
-            Console.WriteLine("7. Kilépés");
+            Console.WriteLine("5. Kategóriák megtekintése");
+            Console.WriteLine("6. Költségvetés ellenőrzése");
+            Console.WriteLine("7. Statisztikák megtekintése");
+            Console.WriteLine("8. Kilépés");
 
             string valasztas = Console.ReadLine();
             switch (valasztas)
             {
                 case "1":
-                {
                     AddGift(ajandekNev, ajandekAr, ajandekKategoria);
                     break;
-                }
 
                 case "2":
-                {
                     EditGift(ajandekNev, ajandekAr, ajandekKategoria);
                     break;
-                }
 
                 case "3":
-                {
                     RemoveGift(ajandekNev, ajandekAr, ajandekKategoria);
                     break;
-                }
 
                 case "4":
-                {
                     ViewGifts(ajandekNev, ajandekAr, ajandekKategoria);
                     break;
-                }
 
                 case "5":
-                {
                     CategorizeGifts(ajandekNev, ajandekAr, ajandekKategoria);
                     break;
-                }
+                
+                case "6":
+                    CheckBudget(koltseg, ajandekAr);
+                    break;
+                
+                case "7":
+                    ShowStatistics(ajandekNev, ajandekAr);
+                    break;
+                
+                case "8":
+                    fut = false;
+                    Console.WriteLine("Kellemes karácsonyt! 🎄");
+                    break;
+                
+                default:
+                    Console.WriteLine("Érvénytelen választás! Próbáld újra.");
+                    break;
             }
         }
 
@@ -86,12 +94,14 @@ class Program
         {
             try
             {
-                Console.WriteLine("Jándék neve:");
+                Console.WriteLine("Ajándék neve:");
                 string nev = Console.ReadLine();
                 if (string.IsNullOrEmpty(nev)) throw new Exception("Az ajándék neve nem lehet üres.");
+                
                 Console.WriteLine("Ár:");
                 int ar = Convert.ToInt32(Console.ReadLine());
                 if (int.IsNegative(ar)) throw new Exception("A termék ára nem lehet negatív!");
+                
                 Console.WriteLine("Kategória:");
                 string kategoria = Console.ReadLine();
                 if (string.IsNullOrEmpty(kategoria)) throw new Exception("Az ajándék kategóriája nem lehet üres.");
@@ -107,16 +117,15 @@ class Program
             }
             catch (Exception e)
             {
-                Console.WriteLine("Hiba: ", e.Message);
+                Console.WriteLine("Hiba: {e.Message}");
             }
-            return;
         }
         
         
         static void EditGift(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria)
         {
             Console.Write("Add meg annak az ajándéknak a nevét, amit módosítani szeretnél: ");
-            string nev = Console.ReadLine().Trim();
+            string nev = Console.ReadLine();
             int index = ajandekNev.IndexOf(nev);
 
             if (index <= 0)
@@ -124,8 +133,8 @@ class Program
                 try
                 {
                     Console.Write($"Új név (jelenlegi: {ajandekNev[index]}): ");
-                    string ujNev= Console.ReadLine().Trim();
-                    ajandekNev[index] = string.IsNullOrEmpty(ujNev) ? ajandekNev[index] : ujNev;
+                    string ujNev= Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(ujNev)) ajandekNev[index] = ujNev;
 
                     Console.Write($"Új ár (jelenlegi: {ajandekAr[index]}): ");
                     int ujAr = Convert.ToInt32(Console.ReadLine());
@@ -133,7 +142,7 @@ class Program
                     ajandekAr[index] = ujAr;
 
                     Console.Write($"Új kategória (jelenlegi: {ajandekKategoria[index]}): ");
-                    string ujKategoria = Console.ReadLine().Trim();
+                    string ujKategoria = Console.ReadLine();
                     ajandekKategoria[index] = string.IsNullOrEmpty(ujKategoria) ? ajandekKategoria[index] : ujKategoria;
 
                     Console.WriteLine($"{ajandekNev[index]} módosítva.");
@@ -156,7 +165,7 @@ class Program
         static void RemoveGift(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria)
         {
             Console.WriteLine("Add meg a törölni kívánt ajándék nevét:");
-            string nev = Console.ReadLine().Trim();
+            string nev = Console.ReadLine();
             int index = ajandekNev.IndexOf(nev);
             
             if (index <= 0)
@@ -183,14 +192,83 @@ class Program
             Console.WriteLine("\nAjándéklista:");
             for (int i = 0; i < ajandekNev.Count; i++)
             {
-                Console.WriteLine($"{ajandekNev[i]} - {ajandekNev[i]} Ft - Kategória: {ajandekNev[i]}");
+                Console.WriteLine($"{ajandekNev[i]} - {ajandekAr[i]} Ft - Kategória: {ajandekKategoria[i]}");
             }
         }
 
         static void CategorizeGifts(List<string> ajandekNev, List<int> ajandekAr, List<string> ajandekKategoria)
         {
-            
-            return;
+            if (ajandekNev.Count == 0)
+            {
+                Console.WriteLine("Még nincs ajándék hozzáadva.");
+                return;
+            }
+
+            var kategoriak = new Dictionary<string, List<string>>();
+            for (int i = 0; i < ajandekKategoria.Count; i++)
+            {
+                if (!kategoriak.ContainsKey(ajandekKategoria[i]))
+                    kategoriak[ajandekKategoria[i]] = new List<string>();
+
+                kategoriak[ajandekKategoria[i]].Add(ajandekNev[i]);
+            }
+
+            Console.WriteLine("\nAjándékok kategóriák szerint:");
+            foreach (var kategoria in kategoriak)
+            {
+                Console.WriteLine($"{kategoria.Key}: {string.Join(", ", kategoria.Value)}");
+            }
+        }
+
+        static void CheckBudget(int koltseg, List<int> ajandekAr)
+        {
+            int osszesAr = 0;
+            foreach (int ar in ajandekAr)
+            {
+                osszesAr += ar;
+            }
+
+            Console.WriteLine($"Eddig elköltött összeg: {osszesAr} Ft");
+            Console.WriteLine($"Hátralévő költségvetés: {koltseg - osszesAr} Ft");
+
+            if (osszesAr > koltseg)
+            {
+                Console.WriteLine("Figyelmeztetés: Túllépted a költségvetést!");
+            }
+        }
+
+        static void ShowStatistics(List<string> ajandekNev, List<int> ajandekAr)
+        {
+            if (ajandekNev.Count == 0)
+            {
+                Console.WriteLine("Még nincs ajándék hozzáadva.");
+                return;
+            }
+
+            int maxAr = ajandekAr[0];
+            int minAr = ajandekAr[0];
+            int osszesen = 0;
+            string legdragabb = "", legolcsobb = "";
+
+            for (int i = 0; i < ajandekAr.Count; i++)
+            {
+                osszesen += ajandekAr[i];
+                if (ajandekAr[i] > maxAr)
+                {
+                    maxAr = ajandekAr[i];
+                    legdragabb = ajandekNev[i];
+                }
+                if (ajandekAr[i] < minAr)
+                {
+                    minAr = ajandekAr[i];
+                    legolcsobb = ajandekNev[i];
+                }
+            }
+
+            Console.WriteLine($"Ajándékok száma: {ajandekNev.Count}");
+            Console.WriteLine($"Összes ár: {osszesen} Ft");
+            Console.WriteLine($"Legdrágább ajándék: {legdragabb} ({maxAr} Ft)");
+            Console.WriteLine($"Legolcsóbb ajándék: {legolcsobb} ({minAr} Ft)");
         }
     }
 }
